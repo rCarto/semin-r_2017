@@ -43,7 +43,7 @@ knit_hooks$set(par.title = function(before, options, envir){
 
 
 # 
-## Cartographie avec R, le package `cartography`
+## Cartographie avec R : le package `cartography`
 
 ![](img/cartomix.png)
 
@@ -61,18 +61,14 @@ Timothée Giraud
 
 
 
-# Les fonctionnalités spatiales de R
+# Les fonctionnalités spatiales de R {.tabset .tabset-fade .tabset-pills}
+
 
 ## Les indispensables {.tabset .tabset-fade .tabset-pills}
 
-3 packages sont incontournables
-
-### rgdal
-
-**Import/export d'objets spatiaux et gestion des projections cartographiques**   
+### Import / Export
 
 `rgdal` est une interface entre R et les librairies GDAL ([Geospatial Data Abstraction Library](http://www.gdal.org/)) et [PROJ4](https://github.com/OSGeo/proj.4).
-
 
 
 ```{r ImportShp, cache = T}
@@ -80,11 +76,7 @@ library("rgdal")
 nuts3 <- readOGR(dsn = "data", layer = "nuts3", verbose = TRUE)
 ```
 
-
-
-### sp
-
-**Manipulation et affichage d'objets spatiaux** 
+### Manipulation et affichage
 
 `sp` fournit des classes et des methodes pour les données spatiales dans R.
 
@@ -96,8 +88,7 @@ plot(nuts3, col = "#DAE3E6", border = "#8A0641", lwd = 0.5)
 ```
 
 
-### rgeos
-**Géotraitements**
+### Géotraitements
 
 `rgeos` donne accès à la librairie d'opérations spatiales GEOS ([Geometry Engine - Open Source](http://trac.osgeo.org/geos/)) qui permet notamment d'effectuer les géotraitements suivants :  
 
@@ -133,34 +124,371 @@ plot(europeBuffer, add = T, border = "red")
 
 ```
 
-## Le futur : le package sf
+## Le futur : le package sf {.tabset .tabset-fade .tabset-pills}
+
+Première *release* : 31 octobre 2016  
+Auteur principal et *maintainer* : [Edzer Pebesma](https://github.com/edzer)    
+Financement : <a href="https://www.r-consortium.org/projects/awarded-projects">
+<img src="img/rconsortium.png" width="200">
+</a>  
+
+### Import / Export
+
+
+### Manipulation et affichage
+
+
+### Géotraitements
 
 
 
+# Le package cartography {.tabset .tabset-fade .tabset-pills}
 
-# Le package cartography
+
 
 ## Installation 
 
-- Version stable
+- Version stable (CRAN)
+```{r, eval = FALSE}
+install.packages("cartography")
+```
 
-- Version de développement
+- Version de développement (Github)    
 
-- Version avec sf
+Cette version permet d'utiliser les objets `sf`.   
+```{r, eval = FALSE}
+devtools::install_github(repo = "Groupe-ElementR/cartography", ref = "devsf")
+```
 
 
-## Les données
+## Utilisation {.tabset .tabset-fade .tabset-pills}
+
+### Cartes choroplèthes
+
+```{r choroMap, par.title = TRUE, cache = TRUE}
+library(cartography)
+
+# chargement de données
+data(nuts2006)
+
+# Calcul du taux de croissance annuel moyen
+nuts2.df$cagr <- 100 * (((nuts2.df$pop2008 / nuts2.df$pop1999)^(1/9)) - 1) 
+
+# Cartographie
+choroLayer(spdf = nuts2.spdf, df = nuts2.df, var = "cagr")
+title("Taux de croissance en Europe")
+```
 
 
-## Démonstration
+Après ce premier jet, il est ensuite possible de paramétrer très finement la carte : palette de couleurs, discrétisation, légende, couches d'habillage...
+
+```{r choroMap2, par.title = TRUE, cache = TRUE}
+# Construire une palette de couleurs
+cols <- carto.pal(pal1 = "green.pal", n1 = 2, 
+                  pal2 = "red.pal", n2 = 4) 
+
+# Affichage de couches d'habillage
+plot(nuts0.spdf, border = NA, col = NA, bg = "#A6CAE0")
+plot(world.spdf, col  = "#E3DEBF", border=NA, add=TRUE)
+
+# Cartographie du taux de croissance annuel moyen
+choroLayer(spdf = nuts2.spdf, df = nuts2.df, var = "cagr",
+           breaks = c(-2.43,-1.0,0.0,0.5,1.0,2.0,3.1), 
+           col = cols,
+           border = "grey40",
+           lwd = 0.5, 
+           legend.pos = "right",
+           legend.title.txt = "taux de croissance\nannuel moyen", 
+           legend.values.rnd = 2, 
+           add = TRUE) 
+
+# Affichage de couches d'habillage
+plot(nuts0.spdf,border = "grey20", lwd=0.75, add=TRUE)
+
+# Ajout des titres, légende, sources, etc.
+layoutLayer(title = "Taux de croissance en Europe", 
+            author = "cartography", 
+            sources = "Eurostat, 2008", frame = TRUE, col = NA, 
+            scale = NULL,coltitle = "black",
+            south = TRUE) 
+
+```
+
+### Cartes en symboles proportionnels
+
+Cartographie d'un stock (la population nationale) avec des figurés proportionnels.
+
+```{r propMap, par.title = TRUE, cache = TRUE}
+
+# Affichage de couches d'habillage
+plot(nuts0.spdf, border = NA, col = NA, bg = "#A6CAE0")
+plot(world.spdf, col  = "#E3DEBF", border=NA, add=TRUE)
+plot(nuts0.spdf, col = "#D1914D",border = "grey80", add=TRUE)
+
+# Cartographie de la population des pays en cercles proportionnels
+propSymbolsLayer(spdf = nuts0.spdf, df = nuts0.df,
+                 var = "pop2008", 
+                 symbols = "circle", col =  "seagreen4",
+                 legend.pos = "right", inches = 0.35,
+                 legend.title.txt = "Total\npopulation (2008)",
+                 legend.style = "c")
+
+# Ajout de labels
+dflab <- nuts0.df[order(nuts0.df$pop2008, decreasing = TRUE),][1:8,]
+dflab$lab <- paste(dflab$id, "\n", round(dflab$pop2008/1000000,0), "M", sep ="")
+
+# Label plot of the 8 most populated countries
+labelLayer(spdf = nuts0.spdf, 
+           df = dflab, 
+           txt = "lab", 
+           col = "#690409", 
+           cex = 0.8, 
+           font = 2) 
+
+# Ajout des titres, légende, sources, etc.
+layoutLayer(title = "Countries Population in Europe",
+            theme = 'green.pal',
+            frame = FALSE,
+            author = "cartography",
+            sources = "Eurostat, 2008",
+            scale = NULL,
+            south = TRUE)
+```
+
+### Cartes en symboles proportionnels colorés
+
+```{r psc, par.title = TRUE, cache = TRUE}
+# Load data
+data(nuts2006)
+
+# Compute the compound annual growth rate
+nuts2.df$cagr <- (((nuts2.df$pop2008 / nuts2.df$pop1999)^(1/9)) - 1) * 100
+
+# Plot a layer with the extent of the EU28 countries with only a background color
+plot(nuts0.spdf, border = NA, col = NA, bg = "#A6CAE0")
+# Plot non european space
+plot(world.spdf, col  = "#E3DEBF", border = NA, add = TRUE)
+# Plot Nuts2 regions
+plot(nuts2.spdf, col = "grey60",border = "white", lwd = 0.4, add = TRUE)
+
+# Set a custom color palette
+cols <- carto.pal(pal1 = "blue.pal", n1 = 2, pal2 = "red.pal", n2 = 4)
+
+# Plot symbols with choropleth coloration
+propSymbolsChoroLayer(spdf = nuts2.spdf, 
+                      df = nuts2.df, 
+                      var = "pop2008", 
+                      inches = 0.1, 
+                      var2 = "cagr", 
+                      col = cols, 
+                      breaks = c(-2.43,-1,0,0.5,1,2,3.1), 
+                      border = "grey50",  
+                      lwd = 0.75, 
+                      legend.var.pos = "topright", 
+                      legend.var.values.rnd = -3,
+                      legend.var.title.txt = "Total Population", 
+                      legend.var.style = "e", 
+                      legend.var2.pos = "right", 
+                      legend.var2.title.txt = "Compound Annual\nGrowth Rate") 
+
+# layout
+layoutLayer(title = "Demographic trends, 1999-2008", coltitle = "black",
+            sources = "Eurostat, 2011", scale = NULL,
+            author = "cartography", frame ="", col = NA)
+
+```
+
+
+### Cartes de flux
+
+Il s'agit de représenter des données, agrégées à un niveau régional, sur les jumelages entre villes. 
+
+```{r linkMap, par.title = TRUE, cache=TRUE}
+# Données sur les jumelages
+head(twincities.df)
+
+# Creation d'une couche de liens
+twincities.sf <- getLinkLayer(x = nuts2.spdf, df = twincities.df[,1:2])
+
+# Affichage des liens créés
+plot(st_geometry(twincities.sf), lwd = 0.2)
+
+# Affichage de couches d'habillage
+plot(nuts0.spdf, border = NA, col = NA, bg = "#A6CAE0")
+plot(world.spdf, col  = "#E3DEBF", border=NA, add=TRUE)
+plot(nuts2.spdf, col = "#D1914D",border = "grey80", add=TRUE)
+
+# Cartographie des liens
+gradLinkLayer(x = twincities.sf, df = twincities.df,   
+              var = "fij", 
+              breaks = c(2,5,15,20,30), 
+              lwd = c(0.1,1,4,10), 
+              col = "#92000090",
+              legend.pos = "right", legend.frame = TRUE,
+              legend.title.txt = "Number of Agreements\n(regional level)",
+              add = TRUE)
+
+# Ajout des titres, légende, sources, etc.
+layoutLayer(title = "International Twinning Agreements Between Cities", 
+            author = "cartography", 
+            sources = "Sources: Adam Ploszaj & Wikipedia, 2011",
+            scale = NULL, south = TRUE, frame = TRUE, col = NA, 
+            coltitle = "black")
+```
+
+
+
+
+### Discontinuités
+
+```{r discLayer, cache=TRUE, par.title=TRUE}
+# Load data
+data(nuts2006)
+
+# Get a SpatialLinesDataFrame of countries borders
+nuts0.contig <- getBorders(spdf = nuts0.spdf)
+
+plot(nuts0.spdf, col = "grey", border = NA)
+plot(st_geometry(nuts0.contig), 
+     col = 1:nrow(nuts0.contig), 
+     add=T, lwd = 4)
+
+# Get the GDP per capita
+nuts0.df$gdpcap <- nuts0.df$gdppps2008/nuts0.df$pop2008*1000000
+
+# Plot a layer with the extent of the EU28 countries with only a background color
+plot(nuts0.spdf, border = NA, col = NA, bg = "#A6CAE0")
+# Plot non european space
+plot(world.spdf, col  = "#E3DEBF", border=NA, add=TRUE)
+
+# Plot GDP per capita with a choropleth layer
+choroLayer(spdf = nuts0.spdf, df = nuts0.df, var = "gdpcap", border = "grey80",
+           col = carto.pal(pal1 = "kaki.pal", n1 = 6), method = "quantile",
+           nclass = 6, add=TRUE, legend.pos = "right", 
+           legend.values.rnd = -2,
+           legend.title.txt = "GDP per Capita\n(in euros)")
+
+# Plot discontinuities
+discLayer(x = nuts0.contig, # sf of borders
+          df = nuts0.df, # data frame on countries
+          var = "gdpcap", # variable used to compute discontinuties 
+          type = "rel", # type of discontinuity measure 
+          method="equal", # discretisation of discontinuities
+          nclass=4, # number of discontinuities classes
+          threshold = 0.5, # representation threshold of discontinuities  
+          sizemin = 0.5, # minimum size of discontinuities lines
+          sizemax = 6, # maximum size of discontinuities lines
+          col="red", # color of the lines
+          legend.values.rnd = 1,
+          legend.title.txt = "Discontinuities in \nGDP per Capita\n(relative)",
+          legend.pos = "topright", 
+          add=TRUE)
+
+# Layout
+layoutLayer(title = "Wealth Disparities in Europe", coltitle = "black",
+            sources = "Eurostat, 2011", scale = NULL,
+            author = "cartography", frame ="", col = NA)
+```
+
+
+### Carroyages
+
+```{r gridLayer, par.title=TRUE, cache=TRUE}
+library(cartography)
+# Load data
+data(nuts2006)
+
+# Create a grid layer
+nuts2.spdf@data <- nuts2.df
+mygrid <- getGridLayer(x = nuts2.spdf, 
+                       cellsize = 200000 * 200000, 
+                       var = "pop2008")
+                       
+# Plot dentsity of population
+## conversion from square meter to square kilometers
+mygrid$densitykm <- mygrid$pop2008 * 1000 * 1000 / mygrid$gridarea
+
+# Plot a layer with the extent of the EU28 countries with only a background color
+plot(nuts0.spdf, border = NA, col = NA, bg = "#A6CAE0")
+# Plot non european space
+plot(world.spdf, col  = "#E3DEBF", border=NA, add=TRUE)
+
+# Set a custom color palette
+cols <- carto.pal(pal1 = "wine.pal", n1 = 6)
+
+# Plot the gridded population density
+choroLayer(x = mygrid, var = "densitykm", 
+           border = "grey80", col = cols, legend.pos = "topright",
+           method = "q6", add = TRUE, legend.values.rnd = 1,
+           legend.title.txt = "Population Density\n(inhabitant/km²)")
+
+# Layout
+layoutLayer(title = "Population Density", coltitle = "black",
+            sources = "Eurostat, 2011", scale = NULL, 
+            author = "cartography", frame ="", col = NA)
+```
+
+
+### Cartes lissées
+
+```{r, echo = TRUE, eval = TRUE, cache=TRUE, message=FALSE, warning=FALSE }
+# set margins
+opar <- par(mar = c(0, 0, 1.2, 0))
+# Load data
+data(nuts2006)
+
+nuts3.spdf@data = nuts3.df
+# Create a grid layer
+mygrid <- getGridLayer(x = sf::st_as_sf(nuts3.spdf), 
+                       cellsize = 50000 * 50000, 
+                       type = "regular", 
+                       var = c("pop2008", "gdppps2008"))
+
+
+# Compute data for the grid layer
+mygrid$gdp <- mygrid$gdppps2008*1000000
+
+# list of breaks
+v <- c(2920, 5000, 10000, 15000, 20000, 23500, 30000, 35000, 40000, 42720)
+# Plot a layer with the extent of the EU28 countries with only a background
+# color
+plot(nuts0.spdf, border = NA, col = NA, bg = "#A6CAE0")
+
+# Plot non european space
+plot(world.spdf, col = "#E3DEBF", border = NA, add = TRUE)
+
+# set a color palette
+cols <- c(rev(carto.pal("green.pal", 5)), carto.pal("orange.pal", 4))
+
+# compute & display the potential map
+smoothLayer(x = mygrid, var = "gdp", var2 = "pop2008", breaks = v, 
+            span = 1e+05, beta = 2, mask = nuts0.spdf, resolution = 49000, col = cols, 
+            legend.title.txt = "Potential\nGDP per capita\n(in euros)", legend.values.rnd = -2, 
+            border = "grey80", lwd = 0.5, add = T, legend.pos = "topright")
+
+# plot Europe contour
+plot(rgeos::gBuffer(nuts0.spdf, FALSE, 1), add = T, col = NA, border = "grey50")
+
+# plot a layout
+layoutLayer(title = "Wealth Inequalities in Europe, 2008", 
+            author = "Package cartography v2.0.0", 
+            sources = "Source: Eurostat, 2011", frame = TRUE, scale = 500, north = FALSE, 
+            theme = "sand.pal")
+
+# plot a text on the map
+text(x = 6271272, y = 3743765, labels = "Distance function:\n- type = exponential\n- beta = 2\n- span = 100 km", 
+     cex = 0.8, adj = 0, font = 3)
+
+```
+
 
 
 
 # Ressources {.tabset .tabset-fade .tabset-pills}
 
+La présentation est accessible à cette adresse :     </br> **[https://rcarto.github.io/semin-r_2017/index.html](https://rcarto.github.io/semin-r_2017/index.html)**  
 
-
-Cette présentation est disponible ici
+Son code source est accessible sur [GitHub](https://github.com/rCarto/semin-r_2017).  
 
 
 ## *Package* `cartography`
@@ -255,5 +583,8 @@ Le créateur et *maintainer* de `sf` a publié un certain de nombre de vignettes
 !![Lambert & Zanin](img/lz.jpeg)  
 
 - Nicolas Lambert et Christine Zanin. "Manuel de cartographie: principes, méthodes, applications." (2016). Paris, Armand Colin, Coll. Cursus, 224p.
+
+
+
 
 
