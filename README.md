@@ -1,6 +1,6 @@
 ## Cartographie avec R : le package `cartography`
 
-Cette présentation est accessible [ici](https://rcarto.github.io/semin-r_2017/index.html).
+Cette présentation est accessible [ici](https://rcarto.github.io/semin-r_2017/).
 
 ![](img/cartomix.png)
 
