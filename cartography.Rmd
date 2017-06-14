@@ -3,7 +3,7 @@ title: "Cartographie avec R\n"
 output:
   rmdformats::material:
     highlight: kate
-    self_contained: true
+    self_contained: false
     code_folding: show
     thumbnails: false
     gallery: false
