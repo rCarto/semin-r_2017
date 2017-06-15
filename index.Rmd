@@ -180,16 +180,16 @@ plot(st_geometry(nuts3), col = "#DAE3E6", border = "#8A0641", lwd = 0.5)
 
 #### Agrégation des polygones / dissolve
 
+```{r disxxsolve, par = TRUE, eval=FALSE, echo=TRUE, cache = TRUE }
+europe <- st_union(x = nuts3)
+plot(st_geometry(nuts3), lwd = 0.5)
+plot(europe, lwd = 2, border = "red", add=T)
+```
+
 ```{r x, echo = FALSE, cache = TRUE }
 nuts3 <- st_buffer(x = nuts3,dist = .1)
 europe <- st_union(x = nuts3)
 plot(st_geometry(nuts3), col = "white", lwd = 0.5)
-plot(europe, lwd = 2, border = "red", add=T)
-```
-
-```{r disxxsolve, par = TRUE, eval=FALSE, echo=TRUE, cache = TRUE }
-europe <- st_union(x = nuts3)
-plot(st_geometry(nuts3), lwd = 0.5)
 plot(europe, lwd = 2, border = "red", add=T)
 ```
 
@@ -640,7 +640,7 @@ Le créateur et *maintainer* de `sf` a publié un certain de nombre de vignettes
 - Michelle Béguin et Denise Pumain. "La représentation des données géographiques, Statistique et cartographie." (2003). Paris, Armand Colin, Coll. Cursus, 192p.
 
 
-!![Lambert & Zanin](img/lz.jpeg)  
+![Lambert & Zanin (2016)](img/lz.jpeg)  
 
 - Nicolas Lambert et Christine Zanin. "Manuel de cartographie: principes, méthodes, applications." (2016). Paris, Armand Colin, Coll. Cursus, 224p.
 
