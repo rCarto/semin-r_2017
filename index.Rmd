@@ -7,8 +7,8 @@ output:
     code_folding: show
     thumbnails: false
     gallery: false
-    fig_width: 6
-    fig_height: 6
+    fig_width: 5
+    fig_height: 5
     df_print: kable
 ---
 
@@ -82,7 +82,6 @@ nuts3 <- readOGR(dsn = "data", layer = "nuts3")
 
 ```{r InspectSPDF, par = TRUE, cache = T}
 library("sp")
-print(nuts3@data[1:3,])
 plot(nuts3)
 plot(nuts3, col = "#DAE3E6", border = "#8A0641", lwd = 0.5)
 ```
@@ -128,9 +127,34 @@ plot(europeBuffer, add = T, border = "red")
 
 - Première *release* : 31 octobre 2016   
 - Auteur principal et *maintainer* : [Edzer Pebesma](https://github.com/edzer)    
-- Financement : <a href="https://www.r-consortium.org/projects/awarded-projects">
-<img src="img/rconsortium.png" width="200">
-</a>  
+- Financement : <a href="https://www.r-consortium.org/projects/awarded-projects"><img src="img/rconsortium.png" width="200"></a>  
+
+**Avec `sp` et `rgdal` :**
+```{r compsp, cache = TRUE}
+library('sp')
+library('rgdal')
+nuts3 <- readOGR(dsn = "data", layer = "nuts3", verbose = FALSE)
+str(nuts3[1:3,])
+```
+
+**Avec `sf` :**
+
+```{r compsf, par = TRUE, cache = TRUE}
+library(sf)
+nuts3 <- st_read(dsn = "data", layer = "nuts3", quiet = TRUE)
+str(nuts3[1:3,])
+```
+
+
+
+
+
+
+<img src="img/sf.png" width="800">
+
+
+
+
 
 ### Import / Export
 
@@ -142,11 +166,6 @@ nuts3 <- st_read(dsn = "data", layer = "nuts3")
 
 
 ### Manipulation et affichage
-```{r prsf, par = TRUE, cache = T}
-print(nuts3[1:3,])
-```
-
-<img src="img/sf.png" width="800">
 
 ```{r, par=TRUE, cache=TRUE}
 plot(st_geometry(nuts3))
